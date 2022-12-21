@@ -1,0 +1,27 @@
+FUNC factorial
+LOAD m
+LOAD curr
+MULT
+STORE m
+PUSH 1
+LOAD curr
+ADD
+STORE curr
+LOAD curr
+LOAD n
+GTE
+STORE e
+ENDFUNC
+
+PUSH 2
+STORE curr
+PUSH 1
+STORE m
+PUSH 20
+STORE n
+PUSH true
+STORE e
+RUN factorial e
+
+LOAD m
+PRINT

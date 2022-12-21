@@ -1,0 +1,20 @@
+EXPORT n 1
+EXPORT result 1
+EXPORT curr 1
+
+SET e true
+
+FUNC factorial
+LOAD result
+LOAD curr
+MULT
+STORE result
+PUSH 1
+LOAD curr
+ADD
+STORE curr
+LOAD curr
+LOAD n
+GTE
+STORE e
+ENDFUNC
