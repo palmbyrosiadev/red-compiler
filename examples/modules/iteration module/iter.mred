@@ -1,0 +1,45 @@
+
+// initialise export variables
+EXPORT n 0
+EXARR array
+
+SET isLooping false
+
+FUNC iter
+// load array value at index n and print
+LOAD array n
+PRINT
+
+// increase n by 1
+LOAD n
+PUSH 1
+ADD
+STORE n
+
+// check whether n is equal to the length of the array and end function if it is
+LOAD array
+LEN
+LOAD n
+EQ
+NOT
+STORE isLooping
+
+ENDFUNC
+
+// initialise condition variable
+FUNC init
+LOAD array
+LEN
+LOAD n
+EQ
+NOT
+STORE isLooping
+ENDFUNC
+
+FUNC reset
+CLEAR
+MAKEARRAY
+STORE array
+PUSH 0
+STORE n
+ENDFUNC

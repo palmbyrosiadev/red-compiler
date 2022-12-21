@@ -11,12 +11,14 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
-var dtypes []string = []string{"int", "string", "bool", "float"}
+var dtypes []string = []string{"int", "string", "bool", "float", "numray"}
 var stack []stackVal
 var symbols map[string]stackVal
 var modules map[string]mod
@@ -24,6 +26,7 @@ var frommod bool = false
 var module mod = mod{}
 var modname string
 var tempstack []stackVal
+var comment = false
 
 type mod struct {
 	funcs   map[string]funct
@@ -38,14 +41,18 @@ type funct struct {
 	condition string
 }
 type stackVal struct {
-	val    int
+	val    float64
 	symbol string
 	sval   string
 	dtype  int
 	bval   bool
+	list   []stackVal
 }
 
 func runmod(code string) {
+	if code == "\n" || code == "" {
+		return
+	}
 	for name, v := range module.extvars {
 		module.symbols[name] = v
 	}
@@ -61,14 +68,14 @@ func runmod(code string) {
 		var s stackVal = stackVal{}
 
 		// Push the value onto the temptempstack
-		val, err := strconv.Atoi(parts[1])
+		val, err := strconv.ParseFloat(parts[1], 64)
 		if err != nil {
 			if strings.HasPrefix(strings.Join(parts[1:], " "), "\"") && strings.HasSuffix(strings.Join(parts[1:], " "), "\"") {
-				s.sval = strings.Join(parts[1:], " ")
+				s.sval = strings.Join(parts[1:], " ")[1 : len(strings.Join(parts[1:], " "))-1]
 				s.dtype = 1
 				tempstack = append(tempstack, s)
 			} else if strings.HasPrefix(strings.Join(parts[1:], " "), "'") && strings.HasSuffix(strings.Join(parts[1:], " "), "'") {
-				s.sval = strings.Join(parts[1:], " ")
+				s.sval = strings.Join(parts[1:], " ")[1 : len(strings.Join(parts[1:], " "))-1]
 				s.dtype = 1
 				tempstack = append(tempstack, s)
 			} else if parts[1] == "true" || parts[1] == "false" {
@@ -97,8 +104,8 @@ func runmod(code string) {
 		val2 := tempstack[len(tempstack)-2]
 		tempstack = tempstack[:len(tempstack)-2]
 
-		if val1.dtype == 1 || val2.dtype == 1 {
-			fmt.Println("Cannot add strings")
+		if !(val1.dtype == 0 || val2.dtype == 0) {
+			fmt.Println("Cannot operate non-numbers")
 			os.Exit(1)
 		}
 
@@ -109,8 +116,8 @@ func runmod(code string) {
 		val2 := tempstack[len(tempstack)-2]
 		tempstack = tempstack[:len(tempstack)-2]
 
-		if val1.dtype == 1 || val2.dtype == 1 {
-			fmt.Println("Cannot subtract strings")
+		if !(val1.dtype == 0 || val2.dtype == 0) {
+			fmt.Println("Cannot operate non-numbers")
 			os.Exit(1)
 		}
 
@@ -121,8 +128,8 @@ func runmod(code string) {
 		val2 := tempstack[len(tempstack)-2]
 		tempstack = tempstack[:len(tempstack)-2]
 
-		if val1.dtype == 1 || val2.dtype == 1 {
-			fmt.Println("Cannot multiply strings")
+		if !(val1.dtype == 0 || val2.dtype == 0) {
+			fmt.Println("Cannot operate non-numbers")
 			os.Exit(1)
 		}
 
@@ -138,8 +145,8 @@ func runmod(code string) {
 			os.Exit(1)
 		}
 
-		if val1.dtype == 1 || val2.dtype == 1 {
-			fmt.Println("Cannot divide strings")
+		if !(val1.dtype == 0 || val2.dtype == 0) {
+			fmt.Println("Cannot operate non-numbers")
 			os.Exit(1)
 		}
 
@@ -153,8 +160,34 @@ func runmod(code string) {
 		// Load the value from the symbol table and push it onto the tempstack
 		val, ok := module.symbols[parts[1]]
 		if !ok {
+
 			fmt.Printf("Undefined symbol: %s\n", parts[1])
 			os.Exit(1)
+		}
+		if len(parts) > 2 {
+			if val.dtype != 4 {
+				fmt.Println("Cannot index non-array")
+				os.Exit(1)
+			}
+			index, err := strconv.Atoi(parts[2])
+			if err != nil {
+				valt, ok := module.symbols[parts[2]]
+				if !ok {
+					fmt.Printf("Undefined symbol: %s\n", parts[2])
+					os.Exit(1)
+				} else if valt.dtype != 0 {
+					fmt.Println("Index of array must be number")
+					os.Exit(1)
+				} else {
+					index = int(valt.val)
+				}
+			}
+			if index >= len(val.list) {
+				fmt.Println("Index out of bounds")
+				os.Exit(1)
+			} else {
+				val = val.list[index]
+			}
 		}
 		tempstack = append(tempstack, val)
 	case "PRINT":
@@ -165,8 +198,10 @@ func runmod(code string) {
 			fmt.Println(val.sval)
 		} else if val.dtype == 2 {
 			fmt.Println(val.bval)
-		} else {
+		} else if val.dtype == 0 {
 			fmt.Println(val.val)
+		} else {
+			fmt.Println("Cannot print element")
 		}
 	case "STR":
 		var s stackVal = stackVal{}
@@ -174,20 +209,20 @@ func runmod(code string) {
 		val := tempstack[len(tempstack)-1]
 		tempstack = tempstack[:len(tempstack)-1]
 		if val.dtype == 0 {
-			s.sval = strconv.Itoa(val.val)
+			s.sval = strconv.FormatFloat(val.val, 'f', -1, 64)
 		} else if val.dtype == 2 {
 			s.sval = strconv.FormatBool(val.bval)
 		} else {
 			s.sval = val.sval
 		}
 		tempstack = append(tempstack, s)
-	case "INT":
+	case "FLOAT":
 		var s stackVal = stackVal{}
 		s.dtype = 0
 		val := tempstack[len(tempstack)-1]
 		tempstack = tempstack[:len(tempstack)-1]
 		if val.dtype == 1 {
-			i, err := strconv.Atoi(val.sval)
+			i, err := strconv.ParseFloat(val.sval, 64)
 			if err != nil {
 				fmt.Println("Cannot convert string to int")
 				os.Exit(1)
@@ -329,7 +364,249 @@ func runmod(code string) {
 			fmt.Println("Cannot compare bools")
 			os.Exit(1)
 		}
-
+	case "NOT":
+		// Pop the top value from the stack and negate it
+		val := tempstack[len(tempstack)-1]
+		stack = tempstack[:len(tempstack)-1]
+		if val.dtype != 2 {
+			fmt.Println("Cannot negate non-bool")
+			os.Exit(1)
+		}
+		tempstack = append(tempstack, stackVal{dtype: 2, bval: !val.bval})
+	case "AND":
+		// Pop the top two values from the stack and AND them
+		val1 := tempstack[len(tempstack)-1]
+		val2 := tempstack[len(tempstack)-2]
+		tempstack = tempstack[:len(tempstack)-2]
+		if val1.dtype != 2 || val2.dtype != 2 {
+			fmt.Println("Cannot AND non-bools")
+			os.Exit(1)
+		}
+		tempstack = append(tempstack, stackVal{dtype: 2, bval: val1.bval && val2.bval})
+	case "OR":
+		// Pop the top two values from the stack and OR them
+		val1 := tempstack[len(tempstack)-1]
+		val2 := tempstack[len(tempstack)-2]
+		tempstack = tempstack[:len(tempstack)-2]
+		if val1.dtype != 2 || val2.dtype != 2 {
+			fmt.Println("Cannot OR non-bools")
+			os.Exit(1)
+		}
+		tempstack = append(tempstack, stackVal{dtype: 2, bval: val1.bval || val2.bval})
+	case "DELAYST":
+		// Delay a certain amount of miliseconds
+		val := tempstack[len(tempstack)-1]
+		tempstack = tempstack[:len(tempstack)-1]
+		if val.dtype != 0 {
+			fmt.Println("Cannot delay non-int")
+			os.Exit(1)
+		}
+		time.Sleep(time.Duration(val.val) * time.Millisecond)
+	case "EXIT":
+		os.Exit(0)
+	case "MODSTORE":
+		// Store a value in exported module variable
+		if len(parts) < 3 {
+			fmt.Println("Invalid syntax")
+			os.Exit(1)
+		}
+		if parts[1] == "" || parts[2] == "" {
+			fmt.Println("Invalid syntax")
+			os.Exit(1)
+		}
+		for name, m := range modules {
+			if name == parts[1] {
+				val := tempstack[len(tempstack)-1]
+				tempstack = tempstack[:len(tempstack)-1]
+				m.extvars[parts[2]] = val
+			}
+		}
+	case "MODGET":
+		// Get a value from exported module variable
+		if len(parts) < 3 {
+			fmt.Println("Invalid syntax")
+			os.Exit(1)
+		}
+		if parts[1] == "" || parts[2] == "" {
+			fmt.Println("Invalid syntax")
+			os.Exit(1)
+		}
+		for name, m := range modules {
+			if name == parts[1] {
+				for n, modu := range m.extvars {
+					if n == parts[2] {
+						tempstack = append(tempstack, modu)
+					}
+				}
+			}
+		}
+	case "CLEAR":
+		// Clear stack
+		tempstack = make([]stackVal, 0)
+	case "MAKEARRAY":
+		// Make an array
+		var s stackVal = stackVal{dtype: 4, list: tempstack}
+		tempstack = make([]stackVal, 0)
+		tempstack = append(tempstack, s)
+	case "SPLIT":
+		// Split a string
+		if len(parts) > 1 {
+			if len(tempstack) > 0 {
+				if tempstack[len(tempstack)-1].dtype == 1 {
+					split := strings.Split(tempstack[len(tempstack)-1].sval, parts[1])
+					tempstack = tempstack[:len(tempstack)-1]
+					var s stackVal = stackVal{dtype: 4, list: make([]stackVal, 0)}
+					for _, v := range split {
+						s.list = append(s.list, stackVal{dtype: 1, sval: v})
+					}
+					tempstack = append(tempstack, s)
+				} else {
+					fmt.Println("Cannot split non-string")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("tempstack is empty")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Invalid split")
+			os.Exit(1)
+		}
+	case "JOIN":
+		// Join a string
+		if len(tempstack) > 0 {
+			if tempstack[len(tempstack)-1].dtype == 4 {
+				join := ""
+				for _, v := range tempstack[len(tempstack)-1].list {
+					if v.dtype == 1 {
+						join += v.sval
+						/*
+							if index != len(tempstack[len(tempstack)-1].list)-1 {
+								if !strings.HasSuffix(parts, "JOIN") {
+									join += parts[1]
+								}
+							}*/
+					} else {
+						fmt.Println("Cannot join non-string")
+						os.Exit(1)
+					}
+				}
+				tempstack = tempstack[:len(tempstack)-1]
+				var s stackVal = stackVal{dtype: 1, sval: join}
+				tempstack = append(tempstack, s)
+			} else {
+				fmt.Println("Cannot join non-array")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("tempstack is empty")
+			os.Exit(1)
+		}
+	case "APPEND":
+		// Append to an array
+		if len(tempstack) > 1 {
+			if tempstack[len(tempstack)-1].dtype == 4 {
+				if tempstack[len(tempstack)-2].dtype == 4 {
+					tempstack[len(tempstack)-2].list = append(tempstack[len(tempstack)-2].list, tempstack[len(tempstack)-1].list...)
+					tempstack = tempstack[:len(tempstack)-1]
+				} else {
+					tempstack[len(tempstack)-2].list = append(tempstack[len(tempstack)-2].list, tempstack[len(tempstack)-1])
+					tempstack = tempstack[:len(tempstack)-1]
+				}
+			} else {
+				fmt.Println("Cannot append non-array")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("tempstack is empty")
+			os.Exit(1)
+		}
+	case "LEN":
+		// Get the length of an array
+		if len(tempstack) > 0 {
+			if tempstack[len(tempstack)-1].dtype == 4 {
+				tempstack = append(tempstack, stackVal{dtype: 0, val: float64(len(tempstack[len(tempstack)-1].list))})
+			} else {
+				fmt.Println("Cannot get length of non-array")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("tempstack is empty")
+			os.Exit(1)
+		}
+	case "REMOVE":
+		// Remove an item from an array
+		if len(tempstack) > 1 {
+			if tempstack[len(tempstack)-2].dtype == 4 {
+				if tempstack[len(tempstack)-1].dtype == 0 {
+					if int(tempstack[len(tempstack)-1].val) < len(tempstack[len(tempstack)-2].list) {
+						var i int = int(tempstack[len(tempstack)-1].val)
+						var s stackVal = stackVal{dtype: 4, list: make([]stackVal, 0)}
+						s.list = append(tempstack[len(tempstack)-2].list[:i], tempstack[len(tempstack)-2].list[i+1:]...)
+						tempstack = tempstack[:len(tempstack)-2]
+						tempstack = append(tempstack, s)
+					} else {
+						fmt.Println("Index out of range")
+						os.Exit(1)
+					}
+				} else {
+					fmt.Println("Cannot remove non-integer")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Cannot remove from non-array")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("tempstack is empty")
+			os.Exit(1)
+		}
+	case "RANDINT":
+		// Generate a random integer
+		if len(parts) > 2 {
+			min, err := strconv.Atoi(parts[1])
+			if err != nil {
+				fmt.Println("Invalid minimum")
+				os.Exit(1)
+			}
+			max, err := strconv.Atoi(parts[2])
+			if err != nil {
+				fmt.Println("Invalid maximum")
+				os.Exit(1)
+			}
+			stack = append(stack, stackVal{dtype: 0, val: float64(rand.Intn(max-min) + min)})
+		} else {
+			fmt.Println("Missing minimum and maximum")
+			os.Exit(1)
+		}
+	case "RANDFLOAT":
+		// Generate a random float
+		if len(parts) > 2 {
+			min, err := strconv.ParseFloat(parts[1], 64)
+			if err != nil {
+				fmt.Println("Invalid minimum")
+				os.Exit(1)
+			}
+			max, err := strconv.ParseFloat(parts[2], 64)
+			if err != nil {
+				fmt.Println("Invalid maximum")
+				os.Exit(1)
+			}
+			stack = append(stack, stackVal{dtype: 0, sval: strconv.FormatFloat(rand.Float64()*(max-min)+min, 'f', -1, 64)})
+		} else {
+			fmt.Println("Missing minimum and maximum")
+			os.Exit(1)
+		}
+	case "COMM":
+		// Comment
+	case "MCOMM":
+		// Multi-line comment
+		comment = true
+	case "/*":
+		// Multi-line comment
+		comment = true
+	case "//":
+		// Comment
 	default:
 		fmt.Printf("Invalid operation: %s\n", op)
 		os.Exit(1)
@@ -342,6 +619,9 @@ func runmod(code string) {
 }
 
 func run(code string) {
+	if code == "\n" || code == "" {
+		return
+	}
 	// Split the line into parts
 	parts := strings.Split(code, " ")
 
@@ -354,14 +634,14 @@ func run(code string) {
 		var s stackVal = stackVal{}
 
 		// Push the value onto the stack
-		val, err := strconv.Atoi(parts[1])
+		val, err := strconv.ParseFloat(parts[1], 64)
 		if err != nil {
 			if strings.HasPrefix(strings.Join(parts[1:], " "), "\"") && strings.HasSuffix(strings.Join(parts[1:], " "), "\"") {
-				s.sval = strings.Join(parts[1:], " ")
+				s.sval = strings.Join(parts[1:], " ")[1 : len(strings.Join(parts[1:], " "))-1]
 				s.dtype = 1
 				stack = append(stack, s)
 			} else if strings.HasPrefix(strings.Join(parts[1:], " "), "'") && strings.HasSuffix(strings.Join(parts[1:], " "), "'") {
-				s.sval = strings.Join(parts[1:], " ")
+				s.sval = strings.Join(parts[1:], " ")[1 : len(strings.Join(parts[1:], " "))-1]
 				s.dtype = 1
 				stack = append(stack, s)
 			} else if parts[1] == "true" || parts[1] == "false" {
@@ -390,8 +670,8 @@ func run(code string) {
 		val2 := stack[len(stack)-2]
 		stack = stack[:len(stack)-2]
 
-		if val1.dtype == 1 || val2.dtype == 1 {
-			fmt.Println("Cannot add strings")
+		if !(val1.dtype == 0 || val2.dtype == 0) {
+			fmt.Println("Cannot operate non-numbers")
 			os.Exit(1)
 		}
 
@@ -402,8 +682,8 @@ func run(code string) {
 		val2 := stack[len(stack)-2]
 		stack = stack[:len(stack)-2]
 
-		if val1.dtype == 1 || val2.dtype == 1 {
-			fmt.Println("Cannot subtract strings")
+		if !(val1.dtype == 0 || val2.dtype == 0) {
+			fmt.Println("Cannot operate non-numbers")
 			os.Exit(1)
 		}
 
@@ -414,8 +694,8 @@ func run(code string) {
 		val2 := stack[len(stack)-2]
 		stack = stack[:len(stack)-2]
 
-		if val1.dtype == 1 || val2.dtype == 1 {
-			fmt.Println("Cannot multiply strings")
+		if !(val1.dtype == 0 || val2.dtype == 0) {
+			fmt.Println("Cannot operate non-numbers")
 			os.Exit(1)
 		}
 
@@ -426,8 +706,8 @@ func run(code string) {
 		val2 := stack[len(stack)-2]
 		stack = stack[:len(stack)-2]
 
-		if val2.val == 0 {
-			fmt.Println("Cannot divide by zero")
+		if !(val1.dtype == 0 || val2.dtype == 0) {
+			fmt.Println("Cannot operate non-numbers")
 			os.Exit(1)
 		}
 
@@ -449,6 +729,31 @@ func run(code string) {
 			fmt.Printf("Undefined symbol: %s\n", parts[1])
 			os.Exit(1)
 		}
+		if len(parts) > 2 {
+			if val.dtype != 4 {
+				fmt.Println("Cannot index non-array")
+				os.Exit(1)
+			}
+			index, err := strconv.Atoi(parts[2])
+			if err != nil {
+				valt, ok := symbols[parts[2]]
+				if !ok {
+					fmt.Printf("Undefined symbol: %s\n", parts[1])
+					os.Exit(1)
+				} else if valt.dtype != 0 {
+					fmt.Println("Index of array must be number")
+					os.Exit(1)
+				} else {
+					index = int(valt.val)
+				}
+			}
+			if index >= len(val.list) {
+				fmt.Println("Index out of bounds")
+				os.Exit(1)
+			} else {
+				val = val.list[index]
+			}
+		}
 		stack = append(stack, val)
 	case "PRINT":
 		// Pop the top value from the stack and print it
@@ -458,8 +763,10 @@ func run(code string) {
 			fmt.Println(val.sval)
 		} else if val.dtype == 2 {
 			fmt.Println(val.bval)
-		} else {
+		} else if val.dtype == 0 {
 			fmt.Println(val.val)
+		} else {
+			fmt.Println("Cannot print element")
 		}
 	case "STR":
 		var s stackVal = stackVal{}
@@ -467,20 +774,20 @@ func run(code string) {
 		val := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 		if val.dtype == 0 {
-			s.sval = strconv.Itoa(val.val)
+			s.sval = strconv.FormatFloat(val.val, 'f', -1, 64)
 		} else if val.dtype == 2 {
 			s.sval = strconv.FormatBool(val.bval)
 		} else {
 			s.sval = val.sval
 		}
 		stack = append(stack, s)
-	case "INT":
+	case "FLOAT":
 		var s stackVal = stackVal{}
 		s.dtype = 0
 		val := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 		if val.dtype == 1 {
-			i, err := strconv.Atoi(val.sval)
+			i, err := strconv.ParseFloat(val.sval, 64)
 			if err != nil {
 				fmt.Println("Cannot convert string to int")
 				os.Exit(1)
@@ -622,7 +929,250 @@ func run(code string) {
 			fmt.Println("Cannot compare bools")
 			os.Exit(1)
 		}
+	case "NOT":
+		// Pop the top value from the stack and negate it
+		val := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		if val.dtype != 2 {
+			fmt.Println("Cannot negate non-bool")
+			os.Exit(1)
+		}
+		stack = append(stack, stackVal{dtype: 2, bval: !val.bval})
+	case "AND":
+		// Pop the top two values from the stack and AND them
+		val1 := stack[len(stack)-1]
+		val2 := stack[len(stack)-2]
+		stack = stack[:len(stack)-2]
+		if val1.dtype != 2 || val2.dtype != 2 {
+			fmt.Println("Cannot AND non-bools")
+			os.Exit(1)
+		}
+		stack = append(stack, stackVal{dtype: 2, bval: val1.bval && val2.bval})
+	case "OR":
+		// Pop the top two values from the stack and OR them
+		val1 := stack[len(stack)-1]
+		val2 := stack[len(stack)-2]
+		stack = stack[:len(stack)-2]
+		if val1.dtype != 2 || val2.dtype != 2 {
+			fmt.Println("Cannot OR non-bools")
+			os.Exit(1)
+		}
+		stack = append(stack, stackVal{dtype: 2, bval: val1.bval || val2.bval})
+	case "DELAYST":
+		// Delay a certain amount of miliseconds
+		val := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		if val.dtype != 0 {
+			fmt.Println("Cannot delay non-int")
+			os.Exit(1)
+		}
+		time.Sleep(time.Duration(val.val) * time.Millisecond)
+	case "EXIT":
+		os.Exit(0)
+	case "MODSTORE":
+		// Store a value in exported module variable
+		if len(parts) < 3 {
+			fmt.Println("Invalid syntax")
+			os.Exit(1)
+		}
+		if parts[1] == "" || parts[2] == "" {
+			fmt.Println("Invalid syntax")
+			os.Exit(1)
+		}
+		for name, m := range modules {
+			if name == parts[1] {
+				val := stack[len(stack)-1]
+				stack = stack[:len(stack)-1]
+				m.extvars[parts[2]] = val
+			}
+		}
 
+	case "MODGET":
+		// Get a value from exported module variable
+		if len(parts) < 3 {
+			fmt.Println("Invalid syntax")
+			os.Exit(1)
+		}
+		if parts[1] == "" || parts[2] == "" {
+			fmt.Println("Invalid syntax")
+			os.Exit(1)
+		}
+		for name, m := range modules {
+			if name == parts[1] {
+				for n, modu := range m.extvars {
+					if n == parts[2] {
+						stack = append(stack, modu)
+					}
+				}
+			}
+		}
+	case "CLEAR":
+		// Clear stack
+		stack = make([]stackVal, 0)
+	case "MAKEARRAY":
+		// Make an array
+		var s stackVal = stackVal{dtype: 4, list: stack}
+		stack = make([]stackVal, 0)
+		stack = append(stack, s)
+	case "SPLIT":
+		// Split a string
+		if len(parts) > 1 {
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 1 {
+					split := strings.Split(stack[len(stack)-1].sval, parts[1])
+					stack = stack[:len(stack)-1]
+					var s stackVal = stackVal{dtype: 4, list: make([]stackVal, 0)}
+					for _, v := range split {
+						s.list = append(s.list, stackVal{dtype: 1, sval: v})
+					}
+					stack = append(stack, s)
+				} else {
+					fmt.Println("Cannot split non-string")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Invalid split")
+			os.Exit(1)
+		}
+	case "JOIN":
+		// Join a string
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 4 {
+				join := ""
+				for _, v := range stack[len(stack)-1].list {
+					if v.dtype == 1 {
+						join += v.sval
+						/*
+							if index != len(stack[len(stack)-1].list)-1 {
+								if !strings.HasSuffix(parts, "JOIN") {
+									join += parts[1]
+								}
+							}*/
+					} else {
+						fmt.Println("Cannot join non-string")
+						os.Exit(1)
+					}
+				}
+				stack = stack[:len(stack)-1]
+				var s stackVal = stackVal{dtype: 1, sval: join}
+				stack = append(stack, s)
+			} else {
+				fmt.Println("Cannot join non-array")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "APPEND":
+		// Append to an array
+		if len(stack) > 1 {
+			if stack[len(stack)-1].dtype == 4 {
+				if stack[len(stack)-2].dtype == 4 {
+					stack[len(stack)-2].list = append(stack[len(stack)-2].list, stack[len(stack)-1].list...)
+					stack = stack[:len(stack)-1]
+				} else {
+					stack[len(stack)-2].list = append(stack[len(stack)-2].list, stack[len(stack)-1])
+					stack = stack[:len(stack)-1]
+				}
+			} else {
+				fmt.Println("Cannot append non-array")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "LEN":
+		// Get the length of an array
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 4 {
+				stack = append(stack, stackVal{dtype: 0, val: float64(len(stack[len(stack)-1].list))})
+			} else {
+				fmt.Println("Cannot get length of non-array")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "REMOVE":
+		// Remove an item from an array
+		if len(stack) > 1 {
+			if stack[len(stack)-2].dtype == 4 {
+				if stack[len(stack)-1].dtype == 0 {
+					if int(stack[len(stack)-1].val) < len(stack[len(stack)-2].list) {
+						var i int = int(stack[len(stack)-1].val)
+						var s stackVal = stackVal{dtype: 4, list: make([]stackVal, 0)}
+						s.list = append(stack[len(stack)-2].list[:i], stack[len(stack)-2].list[i+1:]...)
+						stack = stack[:len(stack)-2]
+						stack = append(stack, s)
+					} else {
+						fmt.Println("Index out of range")
+						os.Exit(1)
+					}
+				} else {
+					fmt.Println("Cannot remove non-integer")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Cannot remove from non-array")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "RANDINT":
+		// Generate a random integer
+		if len(parts) > 1 {
+			min, err := strconv.Atoi(parts[1])
+			if err != nil {
+				fmt.Println("Invalid minimum")
+				os.Exit(1)
+			}
+			max, err := strconv.Atoi(parts[2])
+			if err != nil {
+				fmt.Println("Invalid maximum")
+				os.Exit(1)
+			}
+			stack = append(stack, stackVal{dtype: 0, val: float64(rand.Intn(max-min) + min)})
+		} else {
+			fmt.Println("Missing minimum and maximum")
+			os.Exit(1)
+		}
+	case "RANDFLOAT":
+		// Generate a random float
+		if len(parts) > 1 {
+			min, err := strconv.ParseFloat(parts[1], 64)
+			if err != nil {
+				fmt.Println("Invalid minimum")
+				os.Exit(1)
+			}
+			max, err := strconv.ParseFloat(parts[2], 64)
+			if err != nil {
+				fmt.Println("Invalid maximum")
+				os.Exit(1)
+			}
+			stack = append(stack, stackVal{dtype: 0, sval: strconv.FormatFloat(rand.Float64()*(max-min)+min, 'f', -1, 64)})
+		} else {
+			fmt.Println("Missing minimum and maximum")
+			os.Exit(1)
+		}
+	case "COMM":
+		// Comment
+	case "MCOMM":
+		// Multi-line comment
+		comment = true
+	case "/*":
+		// Multi-line comment
+		comment = true
+	case "//":
+		// Comment
 	default:
 		fmt.Printf("Invalid operation: %s\n", op)
 		os.Exit(1)
@@ -663,6 +1213,12 @@ func main() {
 
 		// Determine the operation
 		op := parts[0]
+		if comment {
+			if op == "ENDCOMM" || op == "*/" {
+				comment = false
+			}
+			continue
+		}
 		if activefuncwrite == true {
 			if op == "ENDFUNC" {
 
@@ -715,14 +1271,14 @@ func main() {
 			var s stackVal = stackVal{}
 
 			// Push the value onto the stack
-			val, err := strconv.Atoi(parts[1])
+			val, err := strconv.ParseFloat(parts[1], 64)
 			if err != nil {
-				if strings.HasPrefix(parts[1], "\"") && strings.HasSuffix(parts[1], "\"") {
-					s.sval = parts[1]
+				if strings.HasPrefix(strings.Join(parts[1:], " "), "\"") && strings.HasSuffix(strings.Join(parts[1:], " "), "\"") {
+					s.sval = strings.Join(parts[1:], " ")[1 : len(strings.Join(parts[1:], " "))-1]
 					s.dtype = 1
 					stack = append(stack, s)
-				} else if strings.HasPrefix(parts[1], "'") && strings.HasSuffix(parts[1], "'") {
-					s.sval = parts[1]
+				} else if strings.HasPrefix(strings.Join(parts[1:], " "), "'") && strings.HasSuffix(strings.Join(parts[1:], " "), "'") {
+					s.sval = strings.Join(parts[1:], " ")[1 : len(strings.Join(parts[1:], " "))-1]
 					s.dtype = 1
 					stack = append(stack, s)
 				} else if parts[1] == "true" || parts[1] == "false" {
@@ -751,8 +1307,8 @@ func main() {
 			val2 := stack[len(stack)-2]
 			stack = stack[:len(stack)-2]
 
-			if val1.dtype == 1 || val2.dtype == 1 {
-				fmt.Println("Cannot add strings")
+			if !(val1.dtype == 0 || val2.dtype == 0) {
+				fmt.Println("Cannot operate non-numbers")
 				os.Exit(1)
 			}
 
@@ -763,8 +1319,8 @@ func main() {
 			val2 := stack[len(stack)-2]
 			stack = stack[:len(stack)-2]
 
-			if val1.dtype == 1 || val2.dtype == 1 {
-				fmt.Println("Cannot subtract strings")
+			if !(val1.dtype == 0 || val2.dtype == 0) {
+				fmt.Println("Cannot operate non-numbers")
 				os.Exit(1)
 			}
 
@@ -775,8 +1331,8 @@ func main() {
 			val2 := stack[len(stack)-2]
 			stack = stack[:len(stack)-2]
 
-			if val1.dtype == 1 || val2.dtype == 1 {
-				fmt.Println("Cannot multiply strings")
+			if !(val1.dtype == 0 || val2.dtype == 0) {
+				fmt.Println("Cannot operate non-numbers")
 				os.Exit(1)
 			}
 
@@ -787,13 +1343,13 @@ func main() {
 			val2 := stack[len(stack)-2]
 			stack = stack[:len(stack)-2]
 
-			if val2.val == 0 {
-				fmt.Println("Cannot divide by zero")
+			if !(val1.dtype == 0 || val2.dtype == 0) {
+				fmt.Println("Cannot operate non-numbers")
 				os.Exit(1)
 			}
 
-			if val1.dtype == 1 || val2.dtype == 1 {
-				fmt.Println("Cannot divide strings")
+			if !(val1.dtype == 0 || val2.dtype == 0) {
+				fmt.Println("Cannot divide non-numbers")
 				os.Exit(1)
 			}
 
@@ -805,10 +1361,36 @@ func main() {
 			symbols[parts[1]] = val
 		case "LOAD":
 			// Load the value from the symbol table and push it onto the stack
+
 			val, ok := symbols[parts[1]]
 			if !ok {
 				fmt.Printf("Undefined symbol: %s\n", parts[1])
 				os.Exit(1)
+			}
+			if len(parts) > 2 {
+				if val.dtype != 4 {
+					fmt.Println("Cannot index non-array")
+					os.Exit(1)
+				}
+				index, err := strconv.Atoi(parts[2])
+				if err != nil {
+					valt, ok := symbols[parts[2]]
+					if !ok {
+						fmt.Printf("Undefined symbol: %s\n", parts[1])
+						os.Exit(1)
+					} else if valt.dtype != 0 {
+						fmt.Println("Index of array must be number")
+						os.Exit(1)
+					} else {
+						index = int(valt.val)
+					}
+				}
+				if index >= len(val.list) {
+					fmt.Println("Index out of bounds")
+					os.Exit(1)
+				} else {
+					val = val.list[index]
+				}
 			}
 			stack = append(stack, val)
 		case "PRINT":
@@ -819,8 +1401,10 @@ func main() {
 				fmt.Println(val.sval)
 			} else if val.dtype == 2 {
 				fmt.Println(val.bval)
-			} else {
+			} else if val.dtype == 0 {
 				fmt.Println(val.val)
+			} else {
+				fmt.Println("Cannot print element")
 			}
 		case "STR":
 			var s stackVal = stackVal{}
@@ -828,20 +1412,20 @@ func main() {
 			val := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
 			if val.dtype == 0 {
-				s.sval = strconv.Itoa(val.val)
+				s.sval = strconv.FormatFloat(val.val, 'f', -1, 64)
 			} else if val.dtype == 2 {
 				s.sval = strconv.FormatBool(val.bval)
 			} else {
 				s.sval = val.sval
 			}
 			stack = append(stack, s)
-		case "INT":
+		case "FLOAT":
 			var s stackVal = stackVal{}
 			s.dtype = 0
 			val := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
 			if val.dtype == 1 {
-				i, err := strconv.Atoi(val.sval)
+				i, err := strconv.ParseFloat(val.sval, 64)
 				if err != nil {
 					fmt.Println("Cannot convert string to int")
 					os.Exit(1)
@@ -983,6 +1567,44 @@ func main() {
 				fmt.Println("Cannot compare bools")
 				os.Exit(1)
 			}
+		case "NOT":
+			// Pop the top value from the stack and negate it
+			val := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			if val.dtype != 2 {
+				fmt.Println("Cannot negate non-bool")
+				os.Exit(1)
+			}
+			stack = append(stack, stackVal{dtype: 2, bval: !val.bval})
+		case "AND":
+			// Pop the top two values from the stack and AND them
+			val1 := stack[len(stack)-1]
+			val2 := stack[len(stack)-2]
+			stack = stack[:len(stack)-2]
+			if val1.dtype != 2 || val2.dtype != 2 {
+				fmt.Println("Cannot AND non-bools")
+				os.Exit(1)
+			}
+			stack = append(stack, stackVal{dtype: 2, bval: val1.bval && val2.bval})
+		case "OR":
+			// Pop the top two values from the stack and OR them
+			val1 := stack[len(stack)-1]
+			val2 := stack[len(stack)-2]
+			stack = stack[:len(stack)-2]
+			if val1.dtype != 2 || val2.dtype != 2 {
+				fmt.Println("Cannot OR non-bools")
+				os.Exit(1)
+			}
+			stack = append(stack, stackVal{dtype: 2, bval: val1.bval || val2.bval})
+		case "DELAYST":
+			// Delay a certain amount of miliseconds
+			val := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			if val.dtype != 0 {
+				fmt.Println("Cannot delay non-int")
+				os.Exit(1)
+			}
+			time.Sleep(time.Duration(val.val) * time.Millisecond)
 		case "FUNC":
 			activefuncwrite = true
 			activefunc.name = parts[1]
@@ -1104,6 +1726,14 @@ func main() {
 					os.Exit(1)
 				}
 			}
+		case "CLEAR":
+			// Clear stack
+			stack = make([]stackVal, 0)
+		case "MAKEARRAY":
+			// Make an array
+			var s stackVal = stackVal{dtype: 4, list: stack}
+			stack = make([]stackVal, 0)
+			stack = append(stack, s)
 		case "IMPORT":
 			// Import a file
 			bytes, err := ioutil.ReadFile(parts[1])
@@ -1133,7 +1763,7 @@ func main() {
 					case "EXPORT":
 						// Export a symbol
 						if len(partsin) > 2 {
-							val, err := strconv.Atoi(partsin[2])
+							val, err := strconv.ParseFloat(partsin[2], 64)
 							if err != nil {
 								fmt.Println("Invalid export")
 								os.Exit(1)
@@ -1144,6 +1774,25 @@ func main() {
 							fmt.Println("Invalid export")
 							os.Exit(1)
 						}
+					case "EXARR":
+						// Export an array
+						if len(partsin) > 1 {
+							var s stackVal = stackVal{dtype: 4, list: stack}
+							m.extvars[partsin[1]] = s
+						} else {
+							fmt.Println("Invalid export")
+							os.Exit(1)
+						}
+					case "COMM":
+						// Comment
+					case "MCOMM":
+						// Multi-line comment
+						comment = true
+					case "/*":
+						// Multi-line comment
+						comment = true
+					case "//":
+						// Comment
 					case "SET":
 						// Set a symbol
 						if len(partsin) > 2 {
@@ -1173,6 +1822,166 @@ func main() {
 				}
 			}
 			modules[parts[2]] = m
+		case "SPLIT":
+			// Split a string
+			if len(parts) > 1 {
+				if len(stack) > 0 {
+					if stack[len(stack)-1].dtype == 1 {
+						split := strings.Split(stack[len(stack)-1].sval, parts[1])
+						stack = stack[:len(stack)-1]
+						var s stackVal = stackVal{dtype: 4, list: make([]stackVal, 0)}
+						for _, v := range split {
+							s.list = append(s.list, stackVal{dtype: 1, sval: v})
+						}
+						stack = append(stack, s)
+					} else {
+						fmt.Println("Cannot split non-string")
+						os.Exit(1)
+					}
+				} else {
+					fmt.Println("Stack is empty")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Invalid split")
+				os.Exit(1)
+			}
+		case "JOIN":
+			// Join a string
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 4 {
+					join := ""
+					for _, v := range stack[len(stack)-1].list {
+						if v.dtype == 1 {
+							join += v.sval
+							/*
+								if index != len(stack[len(stack)-1].list)-1 {
+									if !strings.HasSuffix(parts, "JOIN") {
+										join += parts[1]
+									}
+								}*/
+						} else {
+							fmt.Println("Cannot join non-string")
+							os.Exit(1)
+						}
+					}
+					stack = stack[:len(stack)-1]
+					var s stackVal = stackVal{dtype: 1, sval: join}
+					stack = append(stack, s)
+				} else {
+					fmt.Println("Cannot join non-array")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "APPEND":
+			// Append to an array
+			if len(stack) > 1 {
+				if stack[len(stack)-1].dtype == 4 {
+					if stack[len(stack)-2].dtype == 4 {
+						stack[len(stack)-2].list = append(stack[len(stack)-2].list, stack[len(stack)-1].list...)
+						stack = stack[:len(stack)-1]
+					} else {
+						stack[len(stack)-2].list = append(stack[len(stack)-2].list, stack[len(stack)-1])
+						stack = stack[:len(stack)-1]
+					}
+				} else {
+					fmt.Println("Cannot append non-array")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "LEN":
+			// Get the length of an array
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 4 {
+					stack = append(stack, stackVal{dtype: 0, val: float64(len(stack[len(stack)-1].list))})
+				} else {
+					fmt.Println("Cannot get length of non-array")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "REMOVE":
+			// Remove an item from an array
+			if len(stack) > 1 {
+				if stack[len(stack)-2].dtype == 4 {
+					if stack[len(stack)-1].dtype == 0 {
+						if int(stack[len(stack)-1].val) < len(stack[len(stack)-2].list) {
+							var i int = int(stack[len(stack)-1].val)
+							var s stackVal = stackVal{dtype: 4, list: make([]stackVal, 0)}
+							s.list = append(stack[len(stack)-2].list[:i], stack[len(stack)-2].list[i+1:]...)
+							stack = stack[:len(stack)-2]
+							stack = append(stack, s)
+						} else {
+							fmt.Println("Index out of range")
+							os.Exit(1)
+						}
+					} else {
+						fmt.Println("Cannot remove non-integer")
+						os.Exit(1)
+					}
+				} else {
+					fmt.Println("Cannot remove from non-array")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "COMM":
+			// Comment
+		case "MCOMM":
+			// Multi-line comment
+			comment = true
+		case "/*":
+			// Multi-line comment
+			comment = true
+		case "//":
+			// Comment
+		case "RANDINT":
+			// Generate a random integer
+			if len(parts) > 1 {
+				min, err := strconv.Atoi(parts[1])
+				if err != nil {
+					fmt.Println("Invalid minimum")
+					os.Exit(1)
+				}
+				max, err := strconv.Atoi(parts[2])
+				if err != nil {
+					fmt.Println("Invalid maximum")
+					os.Exit(1)
+				}
+				stack = append(stack, stackVal{dtype: 0, val: float64(rand.Intn(max-min) + min)})
+			} else {
+				fmt.Println("Missing minimum and maximum")
+				os.Exit(1)
+			}
+		case "RANDFLOAT":
+			// Generate a random float
+			if len(parts) > 1 {
+				min, err := strconv.ParseFloat(parts[1], 64)
+				if err != nil {
+					fmt.Println("Invalid minimum")
+					os.Exit(1)
+				}
+				max, err := strconv.ParseFloat(parts[2], 64)
+				if err != nil {
+					fmt.Println("Invalid maximum")
+					os.Exit(1)
+				}
+				stack = append(stack, stackVal{dtype: 0, sval: strconv.FormatFloat(rand.Float64()*(max-min)+min, 'f', -1, 64)})
+			} else {
+				fmt.Println("Missing minimum and maximum")
+				os.Exit(1)
+			}
+
 		default:
 			fmt.Printf("Invalid operation: %s\n", op)
 			os.Exit(1)
