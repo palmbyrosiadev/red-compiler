@@ -1,0 +1,14 @@
+{
+    "prefix": "here is the prefix of the keywords in this library",
+    "main": [
+        {
+            "case": "here you would put a key word",
+            "code": [
+                "these are",
+                "lines of code",
+                "that will be executed",
+                "when the key word is found"
+            ]
+        }
+    ]
+}
