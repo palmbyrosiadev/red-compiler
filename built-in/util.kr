@@ -1,0 +1,43 @@
+{
+    "prefix": "UTIL",
+    "main": [
+        {
+            "case": "SET",
+            "code": [
+                "LOADARG term1",
+                "STORE term0"
+            ]
+        }, {
+            "case": "PRINT",
+            "code": [
+                "LOADARG term0",
+                "PRINT"
+            ]
+        }, {
+            "case": "PRINTVAR",
+            "code": [
+                "LOAD term0",
+                "PRINT"
+            ]
+        }, {
+            "case": "INITNUM",
+            "code": [
+                "PUSH 0",
+                "STORE term0"
+            ]
+        }, {
+            "case": "INITSTR",
+            "code": [
+                "PUSH ''",
+                "STORE term0"
+            ]
+        }, {
+            "case": "INITBOOL",
+            "code": [
+                "PUSH true",
+                "STORE term0"
+            ]
+        }
+
+    ]
+}
