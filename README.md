@@ -1,6 +1,6 @@
 <p align="center">
   <a href="" rel="noopener">
- <img height=300px src="https://i.imgur.com/bGLVyVl.png" alt="Project logo"></a>
+ <img height=300px src="https://i.imgur.com/5FcT7si.png" alt="Project logo"></a>
 </p>
 
 <h3 align="center">RED Programming Language</h3>
