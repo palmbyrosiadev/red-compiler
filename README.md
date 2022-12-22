@@ -146,6 +146,8 @@ RUN power powering
 UTIL PRINTVAR "current"
 ```
 
+Please share your creations under issues with the creation label!
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first
