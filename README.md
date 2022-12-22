@@ -51,6 +51,17 @@ The base keywords (not including built-in util library and module keywords) are:
     - SUB
     - DIV
     - MULT
+- Trig ratios (all in radians and the ones prefixed with A are inverse) (they work on last number in stack and replace it)
+    - SIN
+    - COS
+    - TAN
+    - ASIN
+    - ACOS
+    - ATAN
+- Other math stuff (they work on last number in stack and replace it)
+    - LOG, log base 10
+    - LN, natural log
+    - SQRT, square root
 - Array stuff
     - MAKEARRAY (clears stack and stores whole stack in array, then puts this array into stack)
     - JOIN (joins array from of stack of strings on top of stack)
@@ -84,6 +95,10 @@ Finally more default keywords are provided by the util library to simplify your 
 - PRINTVAR will print a symbol
 
 Again note that in all keyword lib keywords, symbols must be referred to as strings.
+
+Finally there are a few predefined variables that may be expanded on representing mathematical constants. To get them simply LOAD them as with any library. It is highly recommended not to reassign them as libraries may use them:
+- PI (gives approximate value for pi)
+- EULER (gives approximate value for constant e)
 
 Seperate from this, I highly recommend you to check out all the different examples to see most of these keywords in use!
 

@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"math"
 )
 
 var stack []stackVal
@@ -624,6 +625,123 @@ func runmod(code string) {
 			stack = append(stack, stackVal{dtype: 0, sval: strconv.FormatFloat(rand.Float64()*(max-min)+min, 'f', -1, 64)})
 		} else {
 			fmt.Println("Missing minimum and maximum")
+			os.Exit(1)
+		}
+	case "SIN":
+		// Sine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Sin(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get sine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "COS":
+		// Cosine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Cos(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get cosine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "TAN":
+		// Tangent
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Tan(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get tangent of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "ASIN":
+		// Arcsine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Asin(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get arcsine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "ACOS":
+		// Arccosine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Acos(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get arccosine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "ATAN":
+		// Arctangent
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Atan(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get arctangent of non-number")
+				os.Exit(1)
+			}
+		} else {	
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "SQRT":
+		// Square root
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Sqrt(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get square root of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "LN":
+		// Natural logarithm
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Log(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get natural logarithm of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "LOG":
+		// Logarithm
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Log10(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get logarithm of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
 			os.Exit(1)
 		}
 	case "COMM":
@@ -1243,6 +1361,123 @@ func run(code string) {
 			stack = append(stack, stackVal{dtype: 0, sval: strconv.FormatFloat(rand.Float64()*(max-min)+min, 'f', -1, 64)})
 		} else {
 			fmt.Println("Missing minimum and maximum")
+			os.Exit(1)
+		}
+	case "SIN":
+		// Sine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Sin(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get sine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "COS":
+		// Cosine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Cos(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get cosine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "TAN":
+		// Tangent
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Tan(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get tangent of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "ASIN":
+		// Arcsine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Asin(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get arcsine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "ACOS":
+		// Arccosine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Acos(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get arccosine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "ATAN":
+		// Arctangent
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Atan(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get arctangent of non-number")
+				os.Exit(1)
+			}
+		} else {	
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "SQRT":
+		// Square root
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Sqrt(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get square root of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "LN":
+		// Natural logarithm
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Log(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get natural logarithm of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "LOG":
+		// Logarithm
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Log10(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get logarithm of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
 			os.Exit(1)
 		}
 	case "COMM":
@@ -1876,6 +2111,123 @@ func runs(code string) {
 			fmt.Println("Missing minimum and maximum")
 			os.Exit(1)
 		}
+	case "SIN":
+		// Sine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Sin(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get sine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "COS":
+		// Cosine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Cos(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get cosine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "TAN":
+		// Tangent
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Tan(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get tangent of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "ASIN":
+		// Arcsine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Asin(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get arcsine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "ACOS":
+		// Arccosine
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Acos(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get arccosine of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "ATAN":
+		// Arctangent
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Atan(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get arctangent of non-number")
+				os.Exit(1)
+			}
+		} else {	
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "SQRT":
+		// Square root
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Sqrt(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get square root of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "LN":
+		// Natural logarithm
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Log(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get natural logarithm of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
+	case "LOG":
+		// Logarithm
+		if len(stack) > 0 {
+			if stack[len(stack)-1].dtype == 0 {
+				stack[len(stack)-1].val = math.Log10(stack[len(stack)-1].val)
+			} else {
+				fmt.Println("Cannot get logarithm of non-number")
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Stack is empty")
+			os.Exit(1)
+		}
 	case "COMM":
 		// Comment
 	case "MCOMM":
@@ -1969,6 +2321,9 @@ func main() {
 	var activefunc funct = funct{}
 	var running funct = funct{}
 	var runningfunc bool = false
+
+	symbols["PI"] = stackVal{dtype: 0, val: math.Pi}
+	symbols["EULER"] = stackVal{dtype: 0, val: math.E}
 
 	// Iterate through the lines and compile them
 	for _, line := range lines {
@@ -2780,6 +3135,123 @@ func main() {
 				stack = append(stack, stackVal{dtype: 0, sval: strconv.FormatFloat(rand.Float64()*(max-min)+min, 'f', -1, 64)})
 			} else {
 				fmt.Println("Missing minimum and maximum")
+				os.Exit(1)
+			}
+		case "SIN":
+			// Sine
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 0 {
+					stack[len(stack)-1].val = math.Sin(stack[len(stack)-1].val)
+				} else {
+					fmt.Println("Cannot get sine of non-number")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "COS":
+			// Cosine
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 0 {
+					stack[len(stack)-1].val = math.Cos(stack[len(stack)-1].val)
+				} else {
+					fmt.Println("Cannot get cosine of non-number")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "TAN":
+			// Tangent
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 0 {
+					stack[len(stack)-1].val = math.Tan(stack[len(stack)-1].val)
+				} else {
+					fmt.Println("Cannot get tangent of non-number")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "ASIN":
+			// Arcsine
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 0 {
+					stack[len(stack)-1].val = math.Asin(stack[len(stack)-1].val)
+				} else {
+					fmt.Println("Cannot get arcsine of non-number")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "ACOS":
+			// Arccosine
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 0 {
+					stack[len(stack)-1].val = math.Acos(stack[len(stack)-1].val)
+				} else {
+					fmt.Println("Cannot get arccosine of non-number")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "ATAN":
+			// Arctangent
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 0 {
+					stack[len(stack)-1].val = math.Atan(stack[len(stack)-1].val)
+				} else {
+					fmt.Println("Cannot get arctangent of non-number")
+					os.Exit(1)
+				}
+			} else {	
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "SQRT":
+			// Square root
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 0 {
+					stack[len(stack)-1].val = math.Sqrt(stack[len(stack)-1].val)
+				} else {
+					fmt.Println("Cannot get square root of non-number")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "LN":
+			// Natural logarithm
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 0 {
+					stack[len(stack)-1].val = math.Log(stack[len(stack)-1].val)
+				} else {
+					fmt.Println("Cannot get natural logarithm of non-number")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
+				os.Exit(1)
+			}
+		case "LOG":
+			// Logarithm
+			if len(stack) > 0 {
+				if stack[len(stack)-1].dtype == 0 {
+					stack[len(stack)-1].val = math.Log10(stack[len(stack)-1].val)
+				} else {
+					fmt.Println("Cannot get logarithm of non-number")
+					os.Exit(1)
+				}
+			} else {
+				fmt.Println("Stack is empty")
 				os.Exit(1)
 			}
 
