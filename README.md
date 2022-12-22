@@ -1,9 +1,17 @@
-<img style="display: block; margin-left: auto; margin-right: auto; width:50%;" align="center" src="https://i.imgur.com/bGLVyVl.png">
-<h1 align="center">RED Programming Langauge</h1>
+<p align="center">
+  <a href="" rel="noopener">
+ <img height=300px src="https://i.imgur.com/bGLVyVl.png" alt="Project logo"></a>
+</p>
 
-Welcome to the RED Programming Language! This is a stack-based language I wrote over two days where I was very very bored so be aware that it will have limitations. However I have made it almost fully functional in basic tasks and will likely add more functionality. 
+<h3 align="center">RED Programming Language</h3>
 
-If you are up for the challenge, the language can be fun or at least usable to code in.
+<div align="center">
+    
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
+
+</div>
+
+---
 
 ## Installation
 
