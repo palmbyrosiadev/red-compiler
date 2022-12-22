@@ -19,7 +19,6 @@ import (
 	"time"
 )
 
-var dtypes []string = []string{"int", "string", "bool", "float", "numray"}
 var stack []stackVal
 var symbols map[string]stackVal
 var modules map[string]mod
