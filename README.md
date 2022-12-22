@@ -1,4 +1,6 @@
-<img align=center height=200px src="https://imgur.com/bGLVyVl">
+<img style="display: block;
+  margin-left: auto;
+  margin-right: auto;" height=200px src="https://i.imgur.com/bGLVyVl.png">
 <h1 align="center">RED Programming Langauge</h1>
 
 Welcome to the RED Programming Language! This is a stack-based language I wrote over two days where I was very very bored so be aware that it will have limitations. However I have made it almost fully functional in basic tasks and will likely add more functionality. 
