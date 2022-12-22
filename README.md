@@ -127,7 +127,7 @@ UTIL PRINTVAR "current"
 Pull requests are welcome. For major changes, please open an issue first
 to discuss what you would like to change.
 
-Considering the state this was developed in, there will likely be bugs and if there are please do report them with a PR.
+Considering the state this was developed in, there will likely be bugs and if there are please do report them on github.
 
 ## License
 
