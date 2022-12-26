@@ -15,21 +15,47 @@
 
 ## Installation
 
-The easiest way to get started with RED is to download this whole repository. If you dont want the examples you can delete those but make sure to keep built-in as this contains built-in libraries that will also be updated over time. Next you have to build the compiler written in Golang 1.19:
+The easiest way to get started with RED is to download this whole repository. If you dont want the examples you can delete those but make sure to keep built-in as this contains built-in libraries that will also be updated over time. Next you have to build the interpreter written in Golang 1.19:
 
 ```bash
-go build compiler.go
+go build run.go
 ```
 
-An executable called compiler should pop up and you can use this to run your red files! The command to run red files is:
+A binary called run should pop up and you can use this to run your red files! On MacOS the command to run red files using this is:
 
 ```bash
-./compiler path-to-red-file.red
+./run path-to-red-file.red
+```
+
+Wheras on windows it will be:
+
+```bash
+run.exe path-to-red-file.red
 ```
 
 And voila! It should work
 
-Do not alter the built-in folder's name or the compiler's code unless you really know what you are doing and if you do modify the compiler make sure to rebuild the executable. Report any bugs here on github please.
+To create a binary using RED code you have to use the compiler and to do that first run:
+
+```bash
+go build compile.go
+```
+
+A binary called compile should pop up and you can use this to compile your red files! On MacOS the command to compile red files using this is:
+
+```bash
+./compile path-to-red-file.red name-for-binary
+```
+
+Wheras on windows it will be:
+
+```bash
+compile.exe path-to-red-file.red name-for-binary
+```
+
+Then you can run the new binary using ./name-for-binary or name-for-binary.exe for MacOS and Windows respectively. For now you will need the built-in folder in the root directory of where you run your binary or red file from but this may be resolved in an update.
+
+Do not alter the built-in folder's name, the interpreter or the compiler's code unless you really know what you are doing and if you do modify the interpreter or the compiler's code make sure to rebuild the binary. Report any bugs here on github please.
 
 There will be no automatic updating system so if you wish to update your red just redownload the repo and follow the above instruction
 
