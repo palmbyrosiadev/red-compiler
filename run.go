@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 	"math"
+	"os/exec"
 )
 
 var stack []stackVal
@@ -54,8 +55,16 @@ func defimports() {
 	j, err := os.Open("built-in/util.kr")
 
 	if err != nil {
-		fmt.Println("Invalid keyword file")
-		os.Exit(1)
+		cmd := exec.Command("git", "clone", "https://github.com/priyacoding/built-in")
+		fmt.Println("[System] Built-in modules not found, attempting to download them automatically from github in current directory...") 
+		cmd.Run()
+		j, err = os.Open("built-in/util.kr")
+		if err != nil {
+			fmt.Println("[System] Built-in modules not found, please install them from https://github.com/priyacoding/built-in and make sure they are in directory you are running from") 
+			os.Exit(1)
+		}
+		fmt.Println("[System] Built-in modules downloaded successfully! Running program...")
+		fmt.Println("------------------------------------")
 	}
 
 	defer j.Close()

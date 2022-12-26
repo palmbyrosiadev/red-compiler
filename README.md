@@ -15,6 +15,8 @@
 
 ## Installation
 
+NOTE: A new update has simplified built-in libraries as they will auto-install when you need them. A version control system will be added soon as well
+
 The easiest way to get started with RED is to download this whole repository. If you dont want the examples you can delete those but make sure to keep built-in as this contains built-in libraries that will also be updated over time. Next you have to build the interpreter written in Golang 1.19:
 
 ```bash
@@ -53,7 +55,7 @@ Wheras on windows it will be:
 compile.exe path-to-red-file.red name-for-binary
 ```
 
-Then you can run the new binary using ./name-for-binary or name-for-binary.exe for MacOS and Windows respectively. For now you will need the built-in folder in the root directory of where you run your binary or red file from but this may be resolved in an update.
+Then you can run the new binary using ./name-for-binary or name-for-binary.exe for MacOS and Windows respectively. For now you will need the built-in folder in the root directory of where you run your binary or red file from but this may be resolved in an update. If you don't have it a new system has been implemented where RED will automatically try to install built-in modules to where you are running the file from by cloning [priyacoding/built-in](https://github.com/priyacoding/built-in). This works well but it is still suggested to do it yourself!
 
 Do not alter the built-in folder's name, the interpreter or the compiler's code unless you really know what you are doing and if you do modify the interpreter or the compiler's code make sure to rebuild the binary. Report any bugs here on github please.
 
