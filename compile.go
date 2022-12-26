@@ -430,6 +430,11 @@ func runmod(code string) {
 		time.Sleep(time.Duration(val.val) * time.Millisecond)
 	case "EXIT":
 		os.Exit(0)
+	case "INPUT":
+		// Input
+		var res string
+		fmt.Scanln(&res)
+		stack = append(stack, stackVal{dtype: 1, sval: res})
 	case "MODSTORE":
 		// Store a value in exported module variable
 		if len(parts) < 3 {
@@ -739,6 +744,18 @@ func runmod(code string) {
 		} else {
 			fmt.Println("Stack is empty")
 			os.Exit(1)
+		}
+	case "IF":
+		// If
+		if len(parts)>2 {
+			cond := symbols[parts[1]]
+			if !(cond.dtype == 2) {
+				fmt.Println("Invalid condition")
+				os.Exit(1)
+			}
+			if cond.bval {
+				run(strings.Join(parts[2:], " "))
+			}
 		}
 	case "COMM":
 		// Comment
@@ -1165,6 +1182,11 @@ func run(code string) {
 		time.Sleep(time.Duration(val.val) * time.Millisecond)
 	case "EXIT":
 		os.Exit(0)
+	case "INPUT":
+		// Input
+		var res string
+		fmt.Scanln(&res)
+		stack = append(stack, stackVal{dtype: 1, sval: res})
 	case "MODSTORE":
 		// Store a value in exported module variable
 		if len(parts) < 3 {
@@ -1475,6 +1497,18 @@ func run(code string) {
 		} else {
 			fmt.Println("Stack is empty")
 			os.Exit(1)
+		}
+	case "IF":
+		// If
+		if len(parts)>2 {
+			cond := symbols[parts[1]]
+			if !(cond.dtype == 2) {
+				fmt.Println("Invalid condition")
+				os.Exit(1)
+			}
+			if cond.bval {
+				run(strings.Join(parts[2:], " "))
+			}
 		}
 	case "COMM":
 		// Comment
@@ -1913,6 +1947,11 @@ func runs(code string) {
 		time.Sleep(time.Duration(val.val) * time.Millisecond)
 	case "EXIT":
 		os.Exit(0)
+	case "INPUT":
+		// Input
+		var res string
+		fmt.Scanln(&res)
+		stack = append(stack, stackVal{dtype: 1, sval: res})
 	case "MODSTORE":
 		// Store a value in exported module variable
 		if len(parts) < 3 {
@@ -2224,6 +2263,18 @@ func runs(code string) {
 			fmt.Println("Stack is empty")
 			os.Exit(1)
 		}
+	case "IF":
+		// If
+		if len(parts)>2 {
+			cond := symbols[parts[1]]
+			if !(cond.dtype == 2) {
+				fmt.Println("Invalid condition")
+				os.Exit(1)
+			}
+			if cond.bval {
+				run(strings.Join(parts[2:], " "))
+			}
+		}
 	case "COMM":
 		// Comment
 	case "MCOMM":
@@ -2297,9 +2348,9 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	defimports()
-	
+	/*
 	// Read the input file
-	/*bytes, err := ioutil.ReadFile(os.Args[1])
+	bytes, err := ioutil.ReadFile(os.Args[1])
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -3238,6 +3289,11 @@ func main() {
 				fmt.Println("Stack is empty")
 				os.Exit(1)
 			}
+		case "INPUT":
+			// Input
+			var res string
+			fmt.Scanln(&res)
+			stack = append(stack, stackVal{dtype: 1, sval: res})
 		case "LOG":
 			// Logarithm
 			if len(stack) > 0 {
@@ -3251,7 +3307,18 @@ func main() {
 				fmt.Println("Stack is empty")
 				os.Exit(1)
 			}
-
+		case "IF":
+			// If
+			if len(parts)>2 {
+				cond := symbols[parts[1]]
+				if !(cond.dtype == 2) {
+					fmt.Println("Invalid condition")
+					os.Exit(1)
+				}
+				if cond.bval {
+					run(strings.Join(parts[2:], " "))
+				}
+			}
 		default:
 			var cont = false
 			for s, v := range keymods {

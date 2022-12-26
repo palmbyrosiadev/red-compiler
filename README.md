@@ -103,11 +103,17 @@ The base keywords (not including built-in util library and module keywords) are:
     - MAKEARRAY (clears stack and stores whole stack in array, then puts this array into stack)
     - JOIN (joins array from of stack of strings on top of stack)
     - SPLIT (splits string using delimiter into array)
+- Datatype conversion (from top of stack)
+    - FLOAT (conversion to number, can also be integer, input must be string)
+    - BOOL (conversion to bool, input must be string)
+    - STR (converts anything to string)
 - Misc
     - IMPORT (imports .mred module file, 2nd argument defines the reference word)
     - KEYPORT (imports .kr module file containing keywords)
     - STRCAT (concatencate top 2 strings on stack)
     - DELAYST (takes last number from stack and delays that many milliseconds)
+    - INPUT (takes user input till new line and then puts string on top of stack)
+    - IF (condition variable) (command) (takes boolean variable and if true does command in rest of args) (eg IF higher UITL PRINT "higher")
 
 You can also define functions but cannot define functions in them or call functions inside them:
 - FUNC (starts function definition and will continue till ENDFUNC keyword is found)
@@ -172,6 +178,55 @@ ENDFUNC
 RUN power powering
 
 UTIL PRINTVAR "current"
+```
+
+Another example using some more keywords is of a number guessing game:
+
+```python
+RANDINT 0 100
+STORE num
+
+UTIL INITBOOL "guessed"
+PUSH "I have picked a number between 0 and 100. Can you guess it?"
+PRINT
+
+PUSH "Enter your guess: "
+PRINT 
+
+FUNC guess
+    INPUT
+    FLOAT
+    STORE guess
+
+    LOAD num
+    LOAD guess
+    LT
+    STORE LT
+    
+    LOAD num
+    LOAD guess
+    GT
+    STORE GT
+
+    LOAD num
+    LOAD guess
+    EQ
+    STORE EQ
+
+    IF EQ UTIL PRINT "Correct!"
+    IF LT UTIL PRINT "Higher!"
+    IF GT UTIL PRINT "Lower!"
+
+    LOAD EQ
+    NOT
+    STORE guessed
+    
+    UTIL PRINT ""
+    PUSH "Enter your guess: "
+    IF guessed PRINT
+ENDFUNC
+
+RUN guess guessed
 ```
 
 Please share your creations under issues with the creation label!
